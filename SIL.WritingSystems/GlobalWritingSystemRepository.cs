@@ -63,7 +63,6 @@ namespace SIL.WritingSystems
 	{
 		private const string Extension = ".ldml";
 
-		private readonly string _path;
 		private readonly GlobalMutex _mutex;
 		private readonly Dictionary<string, Tuple<DateTime, long>> _lastFileStats;
 		private readonly List<string> _addedWritingSystems;
@@ -74,10 +73,10 @@ namespace SIL.WritingSystems
 		{
 			_lastFileStats = new Dictionary<string, Tuple<DateTime, long>>();
 			_addedWritingSystems = new List<string>();
-			_path = CurrentVersionPath(basePath);
-			if (!Directory.Exists(_path))
-				CreateGlobalWritingSystemRepositoryDirectory(_path);
-			_mutex = new GlobalMutex(_path.Replace('\\', '_').Replace('/', '_'));
+			var path = CurrentVersionPath(basePath);
+			if (!Directory.Exists(path))
+				CreateGlobalWritingSystemRepositoryDirectory(path);
+			_mutex = new GlobalMutex(path.Replace('\\', '_').Replace('/', '_'));
 			_mutex.Initialize();
 		}
 
@@ -94,13 +93,17 @@ namespace SIL.WritingSystems
 				if (WritingSystems.TryGetValue(id, out ws))
 				{
 					// existing writing system
+					Debug.WriteLine($"{id} exists.");
 
 					// preserve this repo's changes
 					if (!ws.IsChanged)
 					{
+						Debug.WriteLine($"{id} is unchanged, and {_lastFileStats.ContainsKey(id)}.");
 						// for performance purposes, we check the last modified timestamp and file size to see if the file has changed
 						// hopefully that is good enough for our purposes here
-						if (_lastFileStats[id].Item1 != fi.LastWriteTime || _lastFileStats[id].Item2 != fi.Length)
+						//if (_lastFileStats[id].Item1 != fi.LastWriteTime || _lastFileStats[id].Item2 != fi.Length)
+						Tuple<DateTime, long> lfi;
+						if (!_lastFileStats.TryGetValue(id, out lfi) || lfi.Item1 != fi.LastWriteTime || lfi.Item2 != fi.Length)
 						{
 							// modified writing system
 							if (!_addedWritingSystems.Contains(id))
@@ -119,6 +122,7 @@ namespace SIL.WritingSystems
 				else
 				{
 					// new writing system
+					Debug.WriteLine($"{id} is new");
 					try
 					{
 						ws = WritingSystemFactory.Create();
