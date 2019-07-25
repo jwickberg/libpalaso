@@ -1,12 +1,10 @@
-﻿namespace SIL.WritingSystems
+namespace SIL.WritingSystems
 {
 	public class RegionSubtag : Subtag
 	{
 		/// <summary>
 		/// Initializes a new private-use instance of the <see cref="RegionSubtag"/> class.
 		/// </summary>
-		/// <param name="code">The code.</param>
-		/// <param name="name">The name.</param>
 		public RegionSubtag(string code, string name = null)
 			: base(code, name, true, false)
 		{
@@ -20,6 +18,12 @@
 		public RegionSubtag(RegionSubtag subtag, string name)
 			: this(subtag.Code, name, subtag.IsPrivateUse, subtag.IsDeprecated)
 		{
+		}
+
+		public override string ToString()
+		{
+			// There are two standard Private Use Regions (AA and ZZ). Show users which is which in lists and comboboxes
+			return IsPrivateUse ? $"{Name} ({Code})" : base.ToString();
 		}
 
 		public static implicit operator RegionSubtag(string code)
